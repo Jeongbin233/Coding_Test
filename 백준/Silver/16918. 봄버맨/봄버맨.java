@@ -1,74 +1,81 @@
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.StringTokenizer;
 
 public class Main {
-    public static void main(String[] args) throws IOException {
+    static int r, c, n;
+    static char[][] map;
+    static int[][] bomb;
+    //상하좌우
+    static int[] dx = {-1, 1, 0, 0};
+    static int[] dy = {0, 0, -1, 1};
+    static int time = 0;
+    public static void main(String[] args) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        String[] inputs = br.readLine().split(" ");
+        StringTokenizer st = new StringTokenizer(br.readLine());
+        r = Integer.parseInt(st.nextToken());
+        c = Integer.parseInt(st.nextToken());
+        n = Integer.parseInt(st.nextToken());
+        map = new char[r][c];
+        bomb = new int[r][c];
 
-        int R = Integer.parseInt(inputs[0]);
-        int C = Integer.parseInt(inputs[1]);
-        int N = Integer.parseInt(inputs[2]);
-
-        char[][] map = new char[R][C];
-        int[][] bombtime = new int[R][C];
-
-        for (int i = 0; i < R; i++) {
-            String tmp = br.readLine();
-            for (int j = 0; j < C; j++) {
-                map[i][j] = tmp.charAt(j);
-                if(map[i][j]=='O'){
-                    bombtime[i][j] = 3; // 폭탄이 터질 시간 (놓인 시간 + 3)
-                }
+        for (int i = 0; i < r; i++) {
+            String str = br.readLine();
+            for (int j = 0; j < c; j++) {
+                map[i][j] = str.charAt(j);
+                if(map[i][j] == 'O')
+                    bomb[i][j] = 3; // 폭탄 터질 시간
             }
         }
 
-        int time = 0;
-        int[] mi = {1, -1, 0, 0};
-        int[] mj = {0, 0, 1, -1};
+        while(time++ < n){
+            if(time%2 == 0)
+                install();
+            else explode();
+        }
 
-        while(time++ < N) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < r; i++) {
+            for (int j = 0; j < c; j++) {
+                sb.append(map[i][j]);
+            }
+            sb.append("\n");
+        }
+        System.out.println(sb);
+    }
 
-            if(time%2==0) {
-                // 비어있는 모든 칸에 폭탄을 설치
-                for (int i = 0; i < R; i++) {
-                    for (int j = 0; j < C; j++) {
-                        if (map[i][j] == '.') {
-                            map[i][j] = 'O';
-                            bombtime[i][j] = time+3;
-                        }
-                    }
+    public static void install(){
+        for (int i = 0; i < r; i++) {
+            for (int j = 0; j < c; j++) {
+                if(map[i][j] == '.'){
+                    map[i][j] = 'O';
+                    bomb[i][j] = time+3;
                 }
-            }else if(time%2==1) {
-                // 시간이 다 된 폭탄 터트림
-                for (int i = 0; i < R; i++) {
-                    for (int j = 0; j < C; j++) {
-                        if (bombtime[i][j] == time) {
-                            map[i][j] = '.';
-                            for (int d = 0; d < 4; d++) {
-                                int ni = i + mi[d];
-                                int nj = j + mj[d];
+            }
+        }
+    }
 
-                                if (ni < 0 || nj < 0 || ni >= R || nj >= C) continue;
-                                
-                                // 이번에 터트려야 할 폭탄을 연쇄반응으로 미리 터트리게 되면 
-                                // 미리 터트린 폭탄의 주변 폭탄을 연쇄시킬 수 없다. 그래서 bombtime을 확인!
-                                if(map[ni][nj]=='O' && bombtime[ni][nj] != time) { 
-                                    map[ni][nj] = '.';
-                                    bombtime[ni][nj] = 0;
-                                }
-                            }
+    public static void explode(){
+        for(int i=0; i<r; i++){
+            for(int j=0; j<c; j++){
+                if(bomb[i][j] == time){
+                    map[i][j] = '.';
+                    for(int k=0; k<4; k++){
+                        int nx = i  + dx[k];
+                        int ny = j + dy[k];
+                        if(check(nx, ny) && map[nx][ny]=='O' && bomb[nx][ny] != time) {
+                            bomb[nx][ny] = 0;
+                            map[nx][ny] = '.';
                         }
                     }
                 }
             }
         }
+    }
 
-       
-        for (int i = 0; i < R; i++) {
-            System.out.println(map[i]);
-        }
-
+    public static boolean check(int x, int y){
+        if(x<0 || y<0 || x>=r || y>=c)
+            return false;
+        return true;
     }
 }
